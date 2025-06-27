@@ -14,6 +14,10 @@ Hệ thống quản lý và chấm điểm **rèn luyện sinh viên** tại Ph�
 > Demo: https://vietnam-women-s-academy-system.onrender.com/
 >![image](https://github.com/user-attachments/assets/ba3f9164-b27d-4ffc-aef2-beeab415d874)
 > ![image](https://github.com/user-attachments/assets/72f8d569-ef9c-409e-8a0c-7064e775c036)
+> ![image](https://github.com/user-attachments/assets/5d7d4db4-3161-4ea9-91df-aae6bb9cce73)
+> ![image](https://github.com/user-attachments/assets/ce7f354c-6ff8-41b4-a81b-52429ea7a25a)
+
+
 
 
 
