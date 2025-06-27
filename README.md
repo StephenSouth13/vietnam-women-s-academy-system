@@ -72,7 +72,8 @@ components/
 ├── shared/
 ├── auth/
 ├── providers/
-🔐 Firebase Config
+---
+###  🔐 Firebase Config
 Tạo file .env.local:
 
 env
