@@ -125,7 +125,6 @@ password: 123456
 // Giảng viên
 email: giangvien@demo.com
 password: 123456
-📷 Screenshot
-<img src="docs/dashboard.png" alt="dashboard" width="700" />
+
 📄 License
 MIT © 2025 — StephenSouth13
