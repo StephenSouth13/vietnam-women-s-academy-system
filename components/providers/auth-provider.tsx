@@ -1,74 +1,118 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
-import { type User as FirebaseUser, onAuthStateChanged } from "firebase/auth"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { type User, onAuthStateChanged } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
-import type { User } from "@/lib/types"
+import { doc, getDoc } from "firebase/firestore"
+
+interface UserData {
+  uid: string
+  email: string
+  role: "student" | "teacher"
+  fullName: string
+  studentId?: string
+  classId?: string
+  avatar?: string
+  phone?: string
+  dateOfBirth?: string
+  department?: string
+  position?: string
+  createdAt: string
+}
 
 interface AuthContextType {
   user: User | null
-  firebaseUser: FirebaseUser | null
+  userData: UserData | null
   loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  firebaseUser: null,
+  userData: null,
   loading: true,
 })
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null)
+  const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
-          if (userDoc.exists()) {
-            setUser(userDoc.data() as User)
-          } else {
-            // User document doesn't exist, create a basic one
-            const basicUser: User = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email || "",
-              role: "student", // default role
-              fullName: firebaseUser.displayName || "User",
-              createdAt: new Date().toISOString(),
-            }
-            await setDoc(doc(db, "users", firebaseUser.uid), basicUser)
-            setUser(basicUser)
-          }
-          setFirebaseUser(firebaseUser)
-        } catch (error) {
-          console.error("Error fetching user data:", error)
-          // Still set the firebase user even if we can't get the document
-          setFirebaseUser(firebaseUser)
-          // Create a minimal user object from Firebase auth
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || "",
-            role: "student",
-            fullName: firebaseUser.displayName || "User",
-            createdAt: new Date().toISOString(),
-          })
-        }
-      } else {
-        setUser(null)
-        setFirebaseUser(null)
-      }
-      setLoading(false)
-    })
+    let unsubscribe: (() => void) | undefined
 
-    return unsubscribe
+    try {
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        try {
+          if (user) {
+            setUser(user)
+            try {
+              const userDoc = await getDoc(doc(db, "users", user.uid))
+              if (userDoc.exists()) {
+                setUserData(userDoc.data() as UserData)
+              } else {
+                // If user document doesn't exist, create a basic one
+                const basicUserData: UserData = {
+                  uid: user.uid,
+                  email: user.email || "",
+                  role: user.email?.includes("giangvien") ? "teacher" : "student",
+                  fullName: user.email?.split("@")[0] || "Người dùng",
+                  createdAt: new Date().toISOString(),
+                }
+                setUserData(basicUserData)
+              }
+            } catch (firestoreError) {
+              console.error("Error fetching user data:", firestoreError)
+              // Set basic user data on error
+              const basicUserData: UserData = {
+                uid: user.uid,
+                email: user.email || "",
+                role: user.email?.includes("giangvien") ? "teacher" : "student",
+                fullName: user.email?.split("@")[0] || "Người dùng",
+                createdAt: new Date().toISOString(),
+              }
+              setUserData(basicUserData)
+            }
+          } else {
+            setUser(null)
+            setUserData(null)
+          }
+          setError(null)
+        } catch (authError) {
+          console.error("Auth state change error:", authError)
+          setError("Authentication error occurred")
+          setUser(null)
+          setUserData(null)
+        } finally {
+          setLoading(false)
+        }
+      })
+    } catch (initError) {
+      console.error("Auth initialization error:", initError)
+      setError("Failed to initialize authentication")
+      setLoading(false)
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe()
+      }
+    }
   }, [])
 
-  return <AuthContext.Provider value={{ user, firebaseUser, loading }}>{children}</AuthContext.Provider>
+  // Show error state if needed
+  if (error) {
+    console.error("Auth Provider Error:", error)
+  }
+
+  return <AuthContext.Provider value={{ user, userData, loading }}>{children}</AuthContext.Provider>
 }

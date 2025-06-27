@@ -3,47 +3,55 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { doc, getDoc } from "firebase/firestore"
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
+import { doc, getDoc, setDoc } from "firebase/firestore"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
-import Link from "next/link"
+import { Eye, EyeOff, Mail, Lock } from "lucide-react"
+import DemoAccounts from "./demo-accounts"
 
-export function LoginForm() {
+export default function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const [isLogin, setIsLogin] = useState(true)
+  const [role, setRole] = useState<"student" | "teacher">("student")
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid))
+      const user = userCredential.user
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data()
-        const redirectPath = userData.role === "student" ? "/student/dashboard" : "/teacher/dashboard"
-        router.push(redirectPath)
-        toast({
-          title: "Đăng nhập thành công",
-          description: `Chào mừng ${userData.fullName}!`,
-        })
+      // Get user role from Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid))
+      const userData = userDoc.data()
+
+      if (userData?.role === "teacher") {
+        router.push("/teacher/dashboard")
+      } else if (userData?.role === "student") {
+        router.push("/student/dashboard")
+      } else {
+        throw new Error("Vai trò người dùng không hợp lệ")
       }
+
+      toast({
+        title: "Đăng nhập thành công",
+        description: "Chào mừng bạn quay trở lại!",
+      })
     } catch (error: any) {
       toast({
         title: "Lỗi đăng nhập",
-        description: "Email hoặc mật khẩu không chính xác.",
+        description: error.message || "Email hoặc mật khẩu không đúng",
         variant: "destructive",
       })
     } finally {
@@ -51,76 +59,124 @@ export function LoginForm() {
     }
   }
 
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
+
+      // Create user document in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: email,
+        role: role,
+        displayName: email.split("@")[0],
+        createdAt: new Date(),
+      })
+
+      toast({
+        title: "Đăng ký thành công",
+        description: "Tài khoản đã được tạo thành công!",
+      })
+
+      // Redirect based on role
+      if (role === "teacher") {
+        router.push("/teacher/dashboard")
+      } else {
+        router.push("/student/dashboard")
+      }
+    } catch (error: any) {
+      toast({
+        title: "Lỗi đăng ký",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail)
+    setPassword(demoPassword)
+  }
+
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-[#005BAC]">Đăng Nhập</CardTitle>
-        <CardDescription>Hệ thống chấm điểm rèn luyện sinh viên</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Nhập email của bạn"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Mật khẩu</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Nhập mật khẩu"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
-
-          <Button type="submit" className="w-full bg-[#005BAC] hover:bg-[#004A8F]" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Đăng nhập
-          </Button>
-        </form>
-
-        <div className="mt-6 text-center text-sm">
-          <p className="text-muted-foreground">
-            Chưa có tài khoản?{" "}
-            <Link href="/register" className="text-[#005BAC] hover:underline">
-              Đăng ký ngay
-            </Link>
-          </p>
+    <form onSubmit={isLogin ? handleLogin : handleRegister} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="pl-10"
+            placeholder="Nhập email của bạn"
+            required
+          />
         </div>
+      </div>
 
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm font-medium mb-2">Tài khoản demo:</p>
-          <div className="text-xs space-y-1">
-            <p>
-              <strong>Sinh viên:</strong> sinhvien@demo.com / 123456
-            </p>
-            <p>
-              <strong>Giảng viên:</strong> giangvien@demo.com / 123456
-            </p>
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Mật khẩu</Label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="pl-10 pr-10"
+            placeholder="Nhập mật khẩu"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {!isLogin && (
+        <div className="space-y-2">
+          <Label htmlFor="role">Vai trò</Label>
+          <select
+            id="role"
+            value={role}
+            onChange={(e) => setRole(e.target.value as "student" | "teacher")}
+            className="w-full p-2 border rounded-md"
+          >
+            <option value="student">Sinh viên</option>
+            <option value="teacher">Giảng viên</option>
+          </select>
+        </div>
+      )}
+
+      <Button type="submit" className="w-full bg-[#005BAC] hover:bg-[#003D73] text-white" disabled={loading}>
+        {loading ? "Đang đăng nhập..." : isLogin ? "Đăng nhập" : "Đăng ký"}
+      </Button>
+
+      <div className="text-center">
+        {isLogin ? (
+          <a href="#" className="text-sm text-blue-600 hover:underline">
+            Quên mật khẩu?
+          </a>
+        ) : null}
+      </div>
+
+      <div className="text-center">
+        <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-sm text-blue-600 hover:underline">
+          {isLogin ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập"}
+        </button>
+      </div>
+      <DemoAccounts onSelectAccount={handleDemoLogin} />
+    </form>
   )
 }

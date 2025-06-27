@@ -3,68 +3,68 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "@/lib/firebase"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { User, Mail, Lock, UserCheck, ArrowLeft, GraduationCap } from "lucide-react"
 import Link from "next/link"
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    fullName: "",
-    studentId: "",
-    role: "student",
-  })
-  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [fullName, setFullName] = useState("")
+  const [role, setRole] = useState("student")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (formData.password !== formData.confirmPassword) {
+    if (!email || !password || !fullName) {
       toast({
         title: "Lỗi",
-        description: "Mật khẩu xác nhận không khớp",
+        description: "Vui lòng điền đầy đủ thông tin",
         variant: "destructive",
       })
       return
     }
 
     setLoading(true)
-
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const uid = userCredential.user.uid
 
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        uid: userCredential.user.uid,
-        email: formData.email,
-        fullName: formData.fullName,
-        studentId: formData.studentId,
-        role: formData.role,
+      await setDoc(doc(db, "users", uid), {
+        uid,
+        email,
+        fullName,
+        role,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
 
       toast({
-        title: "Đăng ký thành công",
-        description: "Tài khoản đã được tạo thành công!",
+        title: "Đăng ký thành công!",
+        description: "Tài khoản đã được tạo thành công",
       })
 
-      router.push("/")
+      // Redirect based on role
+      if (role === "teacher") {
+        router.push("/teacher/dashboard")
+      } else {
+        router.push("/student/dashboard")
+      }
     } catch (error: any) {
+      console.error("Registration error:", error)
       toast({
         title: "Lỗi đăng ký",
-        description: error.message || "Có lỗi xảy ra khi đăng ký",
+        description: error.message || "Có lỗi xảy ra khi tạo tài khoản",
         variant: "destructive",
       })
     } finally {
@@ -74,98 +74,97 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-[#005BAC]">Đăng Ký</CardTitle>
-          <CardDescription>Tạo tài khoản mới cho hệ thống</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Họ và tên</Label>
-              <Input
-                id="fullName"
-                placeholder="Nhập họ và tên"
-                value={formData.fullName}
-                onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="studentId">Mã sinh viên</Label>
-              <Input
-                id="studentId"
-                placeholder="Nhập mã sinh viên"
-                value={formData.studentId}
-                onChange={(e) => setFormData((prev) => ({ ...prev, studentId: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Nhập email"
-                value={formData.email}
-                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Nhập mật khẩu"
-                  value={formData.password}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
+      <div className="w-full max-w-md">
+        <Card className="shadow-2xl border-0">
+          <CardHeader className="text-center pb-6">
+            <div className="mb-4">
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                <GraduationCap className="w-10 h-10 text-blue-600" />
               </div>
             </div>
+            <CardTitle className="text-2xl font-bold text-gray-800">Đăng ký tài khoản</CardTitle>
+            <p className="text-gray-600 text-sm">Hệ thống chấm điểm rèn luyện</p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Họ và tên</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="pl-10"
+                    placeholder="Nhập họ và tên"
+                    required
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Nhập lại mật khẩu"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                required
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    placeholder="Nhập email"
+                    required
+                  />
+                </div>
+              </div>
 
-            <Button type="submit" className="w-full bg-[#005BAC] hover:bg-[#004A8F]" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Đăng ký
-            </Button>
-          </form>
+              <div className="space-y-2">
+                <Label htmlFor="password">Mật khẩu</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                    placeholder="Nhập mật khẩu"
+                    required
+                  />
+                </div>
+              </div>
 
-          <div className="mt-6 text-center text-sm">
-            <p className="text-muted-foreground">
-              Đã có tài khoản?{" "}
-              <Link href="/" className="text-[#005BAC] hover:underline">
-                Đăng nhập ngay
+              <div className="space-y-2">
+                <Label htmlFor="role">Vai trò</Label>
+                <div className="relative">
+                  <UserCheck className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <select
+                    id="role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="student">Sinh viên</option>
+                    <option value="teacher">Giảng viên</option>
+                  </select>
+                </div>
+              </div>
+
+              <Button type="submit" disabled={loading} className="w-full bg-[#005BAC] hover:bg-[#003D73] text-white">
+                {loading ? "Đang đăng ký..." : "Đăng ký"}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <Link href="/" className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline">
+                <ArrowLeft className="w-4 h-4" />
+                Quay lại đăng nhập
               </Link>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
