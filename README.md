@@ -11,7 +11,12 @@ Hệ thống quản lý và chấm điểm **rèn luyện sinh viên** tại Ph�
 - Giảng viên quản lý lớp, chấm điểm, gửi thông báo.
 - Giao diện CRM hiện đại, hỗ trợ dark mode.
 
-> Demo: [Đang triển khai trên Render.com]
+> Demo: https://vietnam-women-s-academy-system.onrender.com/
+>![image](https://github.com/user-attachments/assets/ba3f9164-b27d-4ffc-aef2-beeab415d874)
+> ![image](https://github.com/user-attachments/assets/72f8d569-ef9c-409e-8a0c-7064e775c036)
+
+
+
 
 ---
 
