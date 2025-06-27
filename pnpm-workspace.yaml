@@ -1,0 +1,4 @@
+ignoredBuiltDependencies:
+  - '@firebase/util'
+  - core-js
+  - protobufjs

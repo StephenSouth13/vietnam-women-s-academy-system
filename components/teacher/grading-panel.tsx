@@ -252,8 +252,12 @@ export default function GradingPanel() {
                     )}
                   </div>
                   <div className="mt-2 text-xs text-gray-500">
-                    Nộp: {score.submittedAt.toLocaleDateString("vi-VN")}
-                    {score.gradedAt && <span> • Chấm: {score.gradedAt.toLocaleDateString("vi-VN")}</span>}
+                    Nộp: {new Date(score.submittedAt).toLocaleDateString("vi-VN")}
+                    {score.gradedAt && (
+                      <span>
+                        • Chấm: {new Date(score.gradedAt).toLocaleDateString("vi-VN")}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

@@ -406,7 +406,7 @@ export default function StudentManagement() {
                     </p>
                     {student.lastSubmission && (
                       <p className="text-xs text-gray-500 mt-1">
-                        Nộp cuối: {student.lastSubmission.toLocaleDateString("vi-VN")}
+                        Nộp cuối: {new Date(student.lastSubmission).toLocaleDateString("vi-VN")}
                       </p>
                     )}
                   </div>
