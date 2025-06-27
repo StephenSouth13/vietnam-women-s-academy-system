@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Hệ Thống Chấm Điểm Rèn Luyện - Học Viện Phụ Nữ Việt Nam",
   description: "Hệ thống quản lý chấm điểm rèn luyện sinh viên",
-    generator: 'v0.dev'
+  generator: 'The Next Generation -VSM',
 }
 
 export default function RootLayout({
@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="vi">
-      <body className={inter.className}>
+    <html lang="vi" className={inter.className}>
+      <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
             {children}
