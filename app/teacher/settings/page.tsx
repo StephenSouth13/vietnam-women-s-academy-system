@@ -14,6 +14,13 @@ import { ArrowLeft, Save, Shield, Bell, Users, Download } from "lucide-react"
 import { updatePassword } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 
+interface User {
+  uid: string
+  email: string
+  role?: "student" | "teacher" | string
+  // ...các trường khác nếu cần
+}
+
 export default function TeacherSettings() {
   const { user, loading } = useAuth()
   const { toast } = useToast()
