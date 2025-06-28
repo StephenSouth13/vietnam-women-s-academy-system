@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
 import { Header } from "@/components/layout/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,12 +10,27 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { doc, updateDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { db, storage } from "@/lib/firebase"
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { useRouter } from "next/navigation"
 import { Save, ArrowLeft, Camera } from "lucide-react"
 
+export interface User {
+  uid: string
+  email: string
+  role?: "student" | "teacher" | string
+  fullName?: string
+  phone?: string
+  department?: string
+  position?: string
+  avatar?: string
+  createdAt?: string
+  updatedAt?: string
+  // ...các trường khác nếu có
+}
+
 export default function TeacherProfile() {
-  const { user, loading } = useAuth()
+  const { user, loading } = useAuth() as { user: User | null, loading: boolean }
   const { toast } = useToast()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
@@ -69,6 +84,37 @@ export default function TeacherProfile() {
       })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !e.target.files || e.target.files.length === 0) return
+    const file = e.target.files[0]
+    const storageRef = ref(storage, `avatars/${user.uid}`)
+    try {
+      await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      setFormData((prev) => ({ ...prev, avatar: url }))
+      await updateDoc(doc(db, "users", user.uid), {
+        avatar: url,
+        updatedAt: new Date().toISOString(),
+      })
+      toast({
+        title: "Cập nhật thành công",
+        description: "Ảnh đại diện đã được thay đổi",
+      })
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải ảnh lên",
+        variant: "destructive",
+      })
     }
   }
 
@@ -171,7 +217,14 @@ export default function TeacherProfile() {
                       .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <Button variant="outline" size="sm">
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+                <Button variant="outline" size="sm" onClick={handleAvatarClick}>
                   <Camera className="mr-2 h-4 w-4" />
                   Thay đổi ảnh
                 </Button>

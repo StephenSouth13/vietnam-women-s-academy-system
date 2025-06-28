@@ -9,6 +9,7 @@ import NotificationPanel from "@/components/shared/notifications"
 import TeacherProfile from "@/components/teacher/profile"
 import GradingPanel from "@/components/teacher/grading-panel"
 import StudentManagement from "@/components/teacher/student-management"
+import Image from "next/image"
 
 export default function TeacherDashboardPage() {
   const { user, userData, loading } = useAuth()
@@ -51,6 +52,17 @@ export default function TeacherDashboardPage() {
       <div className="flex-1">
         <main className="p-6">
           <div className="mb-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Image
+                src="/logo/2025-Logo-VWAH-Final.png"
+                alt="Logo"
+                width={48}
+                height={48}
+                className="object-contain"
+                priority
+              />
+              <span className="font-bold text-xl text-[#005BAC]">Hệ thống chấm điểm rèn luyện</span>
+            </div>
             <h1 className="text-2xl font-bold text-gray-800">Chào mừng, {userData?.fullName}</h1>
             <p className="text-gray-600">Hệ thống quản lý chấm điểm rèn luyện</p>
           </div>

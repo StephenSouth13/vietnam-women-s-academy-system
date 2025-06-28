@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff, Mail, Lock, UserPlus, GraduationCap } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -92,8 +93,15 @@ export default function LoginPage() {
         <Card className="shadow-2xl border-0">
           <CardHeader className="text-center pb-6">
             <div className="mb-6">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                <GraduationCap className="w-10 h-10 text-blue-600" />
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto overflow-hidden border border-blue-200 shadow">
+                <Image
+                  src="/logo/2025-Logo-VWAH-Final.png"
+                  alt="Logo"
+                  width={80}
+                  height={80}
+                  className="object-contain"
+                  priority
+                />
               </div>
             </div>
             <CardTitle className="text-2xl font-bold text-gray-800 mb-2">Hệ thống chấm điểm rèn luyện</CardTitle>

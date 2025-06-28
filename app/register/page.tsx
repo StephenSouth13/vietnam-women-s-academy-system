@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { createUserWithEmailAndPassword } from "firebase/auth"
+import Image from "next/image"
 import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "@/lib/firebase"
 import { useRouter } from "next/navigation"
@@ -78,8 +79,15 @@ export default function RegisterPage() {
         <Card className="shadow-2xl border-0">
           <CardHeader className="text-center pb-6">
             <div className="mb-4">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                <GraduationCap className="w-10 h-10 text-blue-600" />
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto overflow-hidden border border-blue-200 shadow">
+                <Image
+                  src="/logo/2025-Logo-VWAH-Final.png"
+                  alt="Logo"
+                  width={80}
+                  height={80}
+                  className="object-contain"
+                  priority
+                />
               </div>
             </div>
             <CardTitle className="text-2xl font-bold text-gray-800">Đăng ký tài khoản</CardTitle>

@@ -7,6 +7,7 @@ import StudentLayout from "@/components/layout/student-layout"
 import ScoringForm from "@/components/student/scoring-form"
 import StudentProfile from "@/components/student/profile"
 import NotificationPanel from "@/components/shared/notifications"
+import Image from "next/image"
 
 export default function StudentDashboard() {
   const { user, userData, loading } = useAuth()
@@ -41,6 +42,17 @@ export default function StudentDashboard() {
 
   return (
     <StudentLayout activeTab={activeTab} onTabChange={setActiveTab}>
+      <div className="flex items-center gap-2 mb-6">
+        <Image
+          src="/logo/2025-Logo-VWAH-Final.png"
+          alt="Logo"
+          width={48}
+          height={48}
+          className="object-contain"
+          priority
+        />
+        <span className="font-bold text-xl text-[#005BAC]">Hệ thống chấm điểm rèn luyện</span>
+      </div>
       {renderContent()}
     </StudentLayout>
   )
